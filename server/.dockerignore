@@ -1,0 +1,14 @@
+node_modules
+dist
+*.db
+*.db-*
+meshvoice.db*
+.jwt-secret
+uploads
+*.log
+npm-debug.log*
+.git
+.gitignore
+Dockerfile
+.dockerignore
+README.md

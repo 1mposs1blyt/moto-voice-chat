@@ -32,3 +32,6 @@ server/*.db-*
 
 # Claude Code personal local settings
 .claude/settings.local.json
+
+# Docker: секреты окружения (JWT_SECRET, DOMAIN) — не коммитить
+.env

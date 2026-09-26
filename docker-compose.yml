@@ -1,0 +1,64 @@
+# MeshVoice — деплой бэкенда в Docker.
+#
+# Быстрый старт (только HTTP, для отладки / за внешним прокси):
+#     docker compose up -d --build
+#
+# С автоматическим HTTPS (release-сборки Android/iOS требуют https):
+#     1. Заведите домен, указывающий на IP сервера (например DuckDNS).
+#     2. Скопируйте .env.example → .env и заполните DOMAIN и EMAIL.
+#     3. docker compose --profile https up -d --build
+#
+# Данные (БД, загрузки, JWT-секрет) лежат в именованных томах и переживают
+# пересборку/обновление образа. Автозапуск после ребута — restart: unless-stopped.
+
+services:
+  server:
+    build:
+      context: ./server
+    image: meshvoice-server
+    container_name: meshvoice-server
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      DB_PATH: /data/meshvoice.db
+      # Секрет токенов задаём явно, чтобы он был стабилен между пересборками.
+      # Сгенерируйте один раз: `openssl rand -hex 32` и положите в .env.
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET не задан — скопируйте .env.example в .env и заполните}
+    volumes:
+      - mv-data:/data           # meshvoice.db
+      - mv-uploads:/app/uploads # вложения чата, фото событий, метки карты
+    # Без профиля https публикуем порт наружу напрямую.
+    # С Caddy (профиль https) порт наружу не нужен — трафик идёт через прокси.
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Caddy: автоматический Let's Encrypt-сертификат + reverse proxy на :3000.
+  # Поднимается только с профилем https: `docker compose --profile https up -d`.
+  caddy:
+    image: caddy:2-alpine
+    container_name: meshvoice-caddy
+    restart: unless-stopped
+    profiles: ["https"]
+    depends_on:
+      - server
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN не задан — заполните в .env для профиля https}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./server/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  mv-data:
+  mv-uploads:
+  caddy-data:
+  caddy-config:

@@ -28,6 +28,56 @@ npm start          # порт 3000
 После запуска в приложении во вкладке **PROFILE** укажите адрес сервера,
 например `http://ВАШ_IP:3000`.
 
+## Деплой в Docker (рекомендуется — сервер всегда в доступе)
+
+Самый простой способ держать бэкенд онлайн 24/7: контейнер с
+`restart: unless-stopped` (сам поднимается после падения и ребута) и
+персистентными томами для БД и загрузок. Файлы уже в репозитории:
+`server/Dockerfile`, `docker-compose.yml` (в корне), `server/Caddyfile`,
+`.env.example`.
+
+**Что переживает пересборку образа** (лежит в именованных Docker-томах):
+`mv-data` → `meshvoice.db`, `mv-uploads` → каталог `uploads/`.
+`JWT_SECRET` задаётся через `.env` (стабилен, не теряется).
+
+### 1. Настройка
+
+```bash
+cp .env.example .env          # в корне репозитория
+# впишите JWT_SECRET (openssl rand -hex 32), а для https ещё DOMAIN
+```
+
+### 2а. Запуск (HTTP — для отладки или за внешним прокси)
+
+```bash
+docker compose up -d --build         # слушает :3000
+docker compose logs -f server        # логи
+```
+
+### 2б. Запуск с автоматическим HTTPS (нужно для release Android/iOS)
+
+Заведите домен (например DuckDNS-поддомен) с A-записью на IP сервера,
+впишите его в `DOMAIN` в `.env`, затем:
+
+```bash
+docker compose --profile https up -d --build
+```
+
+Поднимутся два контейнера: `meshvoice-server` и `meshvoice-caddy`. Caddy сам
+выпустит и продлит сертификат Let's Encrypt и проксирует `443 → server:3000`.
+В облаке/файрволе откройте порты **80 и 443** (для Oracle — ещё iptables, см.
+ниже). В приложении в `lib/config.ts` пропишите `https://ваш-домен`.
+
+### Обновление кода
+
+```bash
+git pull
+docker compose up -d --build         # (--profile https, если с Caddy)
+```
+
+Данные в томах сохраняются. Бэкап: `docker run --rm -v moto-voice-chat_mv-data:/d
+-v "$PWD":/b alpine tar czf /b/db-backup.tgz -C /d .` (аналогично для `mv-uploads`).
+
 ## Развёртывание на Oracle Cloud (Always Free)
 
 Бесплатный VPS 24/7. Порядок:

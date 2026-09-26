@@ -1,15 +1,15 @@
 # 🏍️ Moto-voice-chat
 
-Голосовой чат (рация) для байкеров на React Native (Expo). Работает в  локальной сети (Wi-Fi Hotspot) без интернета и бэкенда. Идеально для  поездок в группе, где нет мобильной связи.
+Голосовой чат (рация) для байкеров на React Native (Expo). Работает в локальной сети (Wi-Fi Hotspot) без интернета и бэкенда. Идеально для поездок в группе, где нет мобильной связи.
 
 ## 🚀 Стек технологий
 
-* **Framework:** Expo (Router) + Development Builds
-* **Voice:**[React Native WebRTC](https://github.com) (с шумоподавлением и эхоподавлением)
-* **Discovery:**[Zeroconf](https://github.com) (автопоиск устройств в сети)
-* **Signaling:**[UDP](https://github.com) (прямой обмен данными между телефонами)
-* **Styling:** NativeWind (Tailwind CSS)
-* **Package Manager:** Bun/Npm
+- **Framework:** Expo (Router) + Development Builds
+- **Voice:**[React Native WebRTC](https://github.com) (с шумоподавлением и эхоподавлением)
+- **Discovery:**[Zeroconf](https://github.com) (автопоиск устройств в сети)
+- **Signaling:**[UDP](https://github.com) (прямой обмен данными между телефонами)
+- **Styling:** NativeWind (Tailwind CSS)
+- **Package Manager:** Bun/Npm
 
 ## 🛠️ Предварительные требования
 
@@ -24,21 +24,23 @@
 1. **Клонируйте репозиторий:**
 
    ```shell
-   git clone https://github.com/arcwagner1337/moto-voice-chat
+   git clone https://github.com/1mposs1blyt/moto-voice-chat
    cd moto-voice-chat
    ```
+
 2. **Установите зависимости:**
 
    ```shell
    bun install
    ```
-3. **Запустите генерацию нативных файлов:***Команда создаст папки /android и /ios с необходимыми разрешениями.*
+
+3. \*\*Запустите генерацию нативных файлов:\*\**Команда создаст папки /android и /ios с необходимыми разрешениями.*
 
    ```shell
    npx expo prebuild
    ```
-4. **Запуск приложения (Development Build):**
-   **Для Android:**
+
+4. **Запуск приложения (Development Build):Для Android:**
 
    ```shell
    bun run build:android
@@ -62,9 +64,9 @@
 
 ## ⚠️ Важные нюансы
 
-* **Expo Go:** Приложение **не будет работать** в обычном Expo Go. Только через `npx expo run`.
-* **Энергопотребление:** Рекомендуется держать телефон на зарядке во время поездки, так как Wi-Fi Hotspot и WebRTC активно потребляют заряд.
-* **Дистанция:** Связь ограничена радиусом действия Wi-Fi (обычно 30-50 метров в прямой видимости).
+- **Expo Go:** Приложение **не будет работать** в обычном Expo Go. Только через `npx expo run`.
+- **Энергопотребление:** Рекомендуется держать телефон на зарядке во время поездки, так как Wi-Fi Hotspot и WebRTC активно потребляют заряд.
+- **Дистанция:** Связь ограничена радиусом действия Wi-Fi (обычно 30-50 метров в прямой видимости).
 
 ## 📜 Лицензия
 

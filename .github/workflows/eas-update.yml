@@ -43,13 +43,11 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
+      # eas-cli ставим напрямую через npx (без expo-github-action: его установка
+      # через yarn падала на раннере — exit code 1). Авторизация — по EXPO_TOKEN
+      # из окружения, eas читает его сам.
       - name: Publish OTA update
         env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           MSG: ${{ github.event.head_commit.message }}
-        run: eas update --branch production --message "${MSG:-manual OTA update}" --non-interactive
+        run: npx --yes eas-cli@latest update --branch production --message "${MSG:-manual OTA update}" --non-interactive

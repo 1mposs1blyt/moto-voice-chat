@@ -2,10 +2,8 @@
 // Пользователь этот адрес не меняет. При переезде сервера меняется только эта
 // константа — это JS-код, нативная пересборка APK/IPA не требуется.
 //
-// ВРЕМЕННО: cloudflared quick-tunnel (systemd cloudflared-mv.service на ноуте).
-// VS Code dev-tunnel сбросил порт 3000 в private (302 на auth) — вернуть его
-// в Public в панели PORTS, тогда можно откатить BACKEND_URL на девтуннель.
-// ВНИМАНИЕ: URL quick-tunnel меняется при рестарте cloudflared — при обрыве
-// связи проверь `systemctl --user status cloudflared-mv` и URL в
-// ~/.cache/cf-mv.log, обнови эту строку и опубликуй OTA.
-export const BACKEND_URL = 'https://confidential-phpbb-epic-leisure.trycloudflare.com';
+// Прод: Docker-контейнер meshvoice-server (:3000) за общим nginx-прокси
+// (global-reverse-proxy, сеть proxy-network), HTTPS через Let's Encrypt.
+// Деплой: docker-compose.yml в корне + server/Dockerfile; nginx-блок для
+// mesh-voice.duckdns.org в config/nginx.conf прокси. Домен на DuckDNS.
+export const BACKEND_URL = 'https://mesh-voice.duckdns.org';

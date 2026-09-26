@@ -1,15 +1,17 @@
 # MeshVoice — деплой бэкенда в Docker.
 #
-# Быстрый старт (только HTTP, для отладки / за внешним прокси):
-#     docker compose up -d --build
+# Вариант A (рекомендуется у вас): за уже существующим nginx.
+#   nginx терминирует TLS и проксирует на meshvoice-server:3000 по имени
+#   контейнера. Контейнер подключается к общей docker-сети nginx (PROXY_NETWORK).
+#     PROXY_NETWORK=<сеть nginx> docker compose up -d --build
+#   Caddy при этом НЕ нужен (профиль https не включаем).
 #
-# С автоматическим HTTPS (release-сборки Android/iOS требуют https):
-#     1. Заведите домен, указывающий на IP сервера (например DuckDNS).
-#     2. Скопируйте .env.example → .env и заполните DOMAIN и EMAIL.
-#     3. docker compose --profile https up -d --build
+# Вариант B (standalone, свой HTTPS через Caddy):
+#     docker network create meshvoice-proxy   # один раз
+#     docker compose --profile https up -d --build   (DOMAIN в .env)
 #
-# Данные (БД, загрузки, JWT-секрет) лежат в именованных томах и переживают
-# пересборку/обновление образа. Автозапуск после ребута — restart: unless-stopped.
+# Данные (БД, загрузки) — в именованных томах, переживают пересборку.
+# Автозапуск после падения/ребута — restart: unless-stopped.
 
 services:
   server:
@@ -27,10 +29,12 @@ services:
     volumes:
       - mv-data:/data           # meshvoice.db
       - mv-uploads:/app/uploads # вложения чата, фото событий, метки карты
-    # Без профиля https публикуем порт наружу напрямую.
-    # С Caddy (профиль https) порт наружу не нужен — трафик идёт через прокси.
+    networks:
+      - proxy
+    # Наружу порт НЕ публикуем: трафик идёт через nginx/Caddy по docker-сети.
+    # Для локальной отладки на самом сервере оставлен доступ только с localhost.
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
       interval: 30s
@@ -39,7 +43,7 @@ services:
       start_period: 10s
 
   # Caddy: автоматический Let's Encrypt-сертификат + reverse proxy на :3000.
-  # Поднимается только с профилем https: `docker compose --profile https up -d`.
+  # Только для варианта B (standalone). Поднимается профилем https.
   caddy:
     image: caddy:2-alpine
     container_name: meshvoice-caddy
@@ -49,6 +53,8 @@ services:
       - server
     environment:
       DOMAIN: ${DOMAIN:?DOMAIN не задан — заполните в .env для профиля https}
+    networks:
+      - proxy
     ports:
       - "80:80"
       - "443:443"
@@ -56,6 +62,13 @@ services:
       - ./server/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
+
+networks:
+  # Общая внешняя сеть. Вариант A: имя сети вашего nginx (PROXY_NETWORK в .env).
+  # Вариант B: `docker network create meshvoice-proxy` (значение по умолчанию).
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:-meshvoice-proxy}
 
 volumes:
   mv-data:

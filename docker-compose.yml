@@ -68,7 +68,7 @@ networks:
   # Вариант B: `docker network create meshvoice-proxy` (значение по умолчанию).
   proxy:
     external: true
-    name: ${PROXY_NETWORK:-meshvoice-proxy}
+    name: ${PROXY_NETWORK:-proxy-network}
 
 volumes:
   mv-data:
